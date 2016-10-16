@@ -1,10 +1,11 @@
-// Protocol:
-//
-// Client connects to server
-// Server rejects connection, tells what clients are required
-// Client
-
-$RC::Debug = true;
+////////////////////////////////////////////////////////////////
+// Support_RequiredClients.cs                                 //
+// Jincux (9789)                                              //
+// Version 1 - 10.16.16                                       //
+//                                                            //
+// Supports Blockland Glass's required clients                //
+////////////////////////////////////////////////////////////////
+$RC::Debug = false;
 
 if($RC::Version >= 1 && !$RC::Debug)
   return;
@@ -14,7 +15,7 @@ $RC::Version = 1;
 $RC::Error[1] = "Non-Glass Add-On";
 $RC::Error[2] = "Already Registered";
 $RC::Error[3] = "Jettison Error";
-$RC::Error[4] = "Glass is in use";
+$RC::Error[4] = "RequiredClients did not load succesfully";
 
 function registerClient() {
   //filler function
@@ -66,8 +67,6 @@ function registerClient(%addonName) {
 function RC::handleRequest(%msg) { // takes in the connection rejection message from the server, builds the reconnect str to tell the server we have it
   %optional = (getField(%msg, 0) $= "MISSING_OPT");
 
-  echo("Optional: " @ (%optional ? "true" : "false"));
-
   %requested = trim(setField(%msg, 0, ""));
   %reconStr = "";
 
@@ -78,19 +77,15 @@ function RC::handleRequest(%msg) { // takes in the connection rejection message 
     %name = getField(%args, 0);
     %reqId = getField(%args, 1);
 
-    echo("Requested \"" @ %name @ "\" (" @ %reqId @ ")");
-
     if($RC::HasClient[%reqId]) {
       %reconStr = trim(%reconStr SPC %reqId);
     } else {
-      echo("missing");
       $RC::MissingName[$RC::MissingCt+0] = %name;
       $RC::MissingId[$RC::MissingCt+0] = %reqId;
       $RC::MissingCt++;
     }
   }
 
-  echo("MissingCt: " @ $RC::MissingCt);
   if($RC::MissingCt > 0) {
     RC::displayMissing(%optional);
     return;
